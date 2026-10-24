@@ -30,7 +30,9 @@ Fire OS 7 and 8.
 - **Recent Apps:** double-press Home from any app; press Up to close an app; Clear RAM tile
 - **Wi-Fi dropdown** with live signal strength and joining networks with a password
 - **Settings menu** with direct links to Fire TV settings pages
-- **Day / Night** mode and a glass-opacity slider
+- **Control Center:** Power Off, Day/Night, Standby and a live RAM bar with Clear RAM
+- **Standby:** a full-screen calendar and clock with today's date in large type
+- **Day / Night** mode, a glass-opacity slider and an **App Size** option (Small: 5 per row, Large: 4)
 - Move, hide and show apps from the Menu button
 - About 90 KB, native Android, no web views
 

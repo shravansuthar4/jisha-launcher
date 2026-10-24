@@ -44,6 +44,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".StandbyActivity"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+
         <service
             android:name=".HomeWatcherService"
             android:exported="false" />

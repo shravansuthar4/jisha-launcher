@@ -62,7 +62,16 @@ final class HomeScreen {
         void openApp(Intent launch, String label);
     }
 
-    private static final int COLUMNS = 4;
+    /** Apps per row: 4 for Large, 5 for Small (the default). */
+    private static int columns() {
+        return Theme.largeApps ? 4 : 5;
+    }
+
+    /** Height of a dock tile for a given number of columns (same maths as buildGrid). */
+    private int tileHeight(int cols) {
+        int tileW = (dp(856) - 2 * dp(12) - (cols - 1) * dp(16)) / cols;
+        return Math.round(tileW * 9f / 16f);
+    }
 
     /** One tile on the home screen. */
     static final class App {
@@ -90,7 +99,8 @@ final class HomeScreen {
     private int currentGlow, lastGlow;
     private TextView greeting, appTitle, wifiText;
     private ImageView wifiIcon;
-    private View settingsPill;
+    private View settingsPill, controlPill, wifiPill;
+    private ControlCenter controlCenter;
     private LinearLayout grid;
     private SettingsPanel settingsPanel;
     private ScrollView page;      // the whole screen scrolls as one page
@@ -233,13 +243,67 @@ final class HomeScreen {
         settingsPanel.refresh();
     }
 
+    private final ControlCenter.Actions controlActions = new ControlCenter.Actions() {
+        @Override
+        public void powerOff() {
+            // Amazon's quick menu: its Sleep tile powers the stick (and the TV over HDMI) down.
+            host.openApp(new Intent("com.amazon.device.settings.action.SHOW_HUD")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), "Power");
+        }
+
+        @Override
+        public void toggleNight() {
+            // Keep the Control Center open: restyle everything underneath, then crossfade from
+            // a snapshot of the old look so the switch is smooth.
+            Bitmap snap = null;
+            try {
+                snap = Bitmap.createBitmap(root.getWidth(), root.getHeight(), Bitmap.Config.RGB_565);
+                root.draw(new Canvas(snap));
+            } catch (Throwable t) {
+                snap = null;
+            }
+            boolean night = !Theme.night;
+            prefs.setNight(night);
+            Theme.night = night;
+            applyTheme();
+            controlCenter.restyle();
+            if (snap != null) {
+                final Bitmap old = snap;
+                final ImageView cover = new ImageView(ctx);
+                cover.setImageBitmap(old);
+                root.addView(cover, match());
+                cover.animate().alpha(0f).setDuration(400).setStartDelay(60)
+                        .withEndAction(() -> {
+                            root.removeView(cover);
+                            old.recycle();
+                        }).start();
+            }
+        }
+
+        @Override
+        public void standby() {
+            host.openApp(new Intent(ctx, StandbyActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), "Standby");
+        }
+
+        @Override
+        public void closed() {
+            if (controlPill != null) controlPill.requestFocus();
+        }
+    };
+
+    private void openControlCenter(boolean focusNight) {
+        if (controlCenter == null || controlPill == null) return;
+        controlCenter.show(root, new View[]{wifiPill, settingsPill, controlPill}, controlPill, focusNight);
+    }
+
     /** Back on the Settings button after the menu closes. */
     private void panelClosed() {
         if (settingsPill != null) settingsPill.requestFocus();
     }
 
     /** Tags of the top buttons, used as "last used" keys alongside app ids. */
-    static final String KEY_WIFI = "pill:wifi", KEY_SETTINGS = "pill:settings";
+    static final String KEY_WIFI = "pill:wifi", KEY_SETTINGS = "pill:settings", KEY_CONTROL = "pill:control";
 
     /**
      * What was last opened from the home screen: an app id, or a top button key. Home brings
@@ -299,6 +363,7 @@ final class HomeScreen {
         if (settingsPanel != null && settingsPanel.isOpen()) settingsPanel.hide(() -> { });
         if (optionsMenu != null && optionsMenu.isOpen()) optionsMenu.hide(() -> { });
         if (wifiDropdown != null && wifiDropdown.isOpen()) wifiDropdown.hide(() -> { });
+        if (controlCenter != null && controlCenter.isOpen()) controlCenter.hide(() -> { });
         if (grid == null) return;
         View target = lastTarget();
         if (target == null) {
@@ -417,7 +482,9 @@ final class HomeScreen {
         appTitle.setShadowLayer(dp(8), 0, dp(1), 0x66000000);
         appTitle.setAlpha(0f); // app names aren't shown; this only carries "Opening …" messages
         LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(-1, -2);
-        tlp.topMargin = dp(194); // leaves only the top ~20% of the second row peeking in
+        // Leaves only the top ~20% of the second row peeking in, whatever the app size.
+        int shrink = tileHeight(4) - tileHeight(columns());
+        tlp.topMargin = dp(194) + Math.round(shrink * 1.2f);
         tlp.leftMargin = dp(4);
         column.addView(appTitle, tlp);
 
@@ -442,6 +509,8 @@ final class HomeScreen {
         root.addView(optionsMenu, match());
         if (wifiDropdown == null) wifiDropdown = new WifiDropdown(ctx, host);
         root.addView(wifiDropdown, match());
+        if (controlCenter == null) controlCenter = new ControlCenter(ctx, controlActions);
+        root.addView(controlCenter, match());
         if (recents == null || !recents.isOpen()) {
             recents = new RecentsScreen(ctx, host, CACHE);
             recents.setListener(recentsListener);
@@ -530,6 +599,7 @@ final class HomeScreen {
             wifiDropdown.show(wifiRef[0], () -> wifiRef[0].requestFocus());
         }, "Wi-Fi");
         wifiRef[0] = wifi;
+        wifiPill = wifi;
         wifi.setTag(KEY_WIFI);
         wifiIcon = (ImageView) ((ViewGroup) wifi).getChildAt(0);
         wifiText = (TextView) ((ViewGroup) wifi).getChildAt(1);
@@ -544,6 +614,16 @@ final class HomeScreen {
         LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(-2, -2);
         slp.leftMargin = dp(12);
         pills.addView(settings, slp);
+
+        // Control Center: glass toggle-style button after Settings.
+        controlPill = pill(R.drawable.ic_control, null, () -> {
+            noteOpened(ctx, KEY_CONTROL);
+            openControlCenter(false);
+        }, "Control Center");
+        controlPill.setTag(KEY_CONTROL);
+        LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(-2, -2);
+        clp.leftMargin = dp(12);
+        pills.addView(controlPill, clp);
 
         FrameLayout.LayoutParams plp = new FrameLayout.LayoutParams(-2, -2, Gravity.END | Gravity.TOP);
         plp.topMargin = dp(22);
@@ -779,6 +859,7 @@ final class HomeScreen {
         grid.removeAllViews();
         List<String> ids = visibleIds();
         int dockPad = dp(12), gap = dp(16);
+        final int COLUMNS = columns();
         // 856dp wide content (incl. the grid's 8dp bleed each side) minus dock padding and gaps.
         int tileW = (dp(856) - 2 * dockPad - (COLUMNS - 1) * gap) / COLUMNS;
         int tileH = Math.round(tileW * 9f / 16f);
@@ -823,6 +904,7 @@ final class HomeScreen {
                 if (settingsPanel != null && settingsPanel.isOpen()) return;
                 if (optionsMenu != null && optionsMenu.isOpen()) return;
                 if (wifiDropdown != null && wifiDropdown.isOpen()) return;
+                if (controlCenter != null && controlCenter.isOpen()) return;
                 if (recentsOpen()) return;
                 // Don't steal focus from the top buttons unless this rebuild owns it.
                 View cur = root.findFocus();

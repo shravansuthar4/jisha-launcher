@@ -8,6 +8,8 @@ final class Theme {
     static boolean night = true;
     /** 0 = clear glass, 100 = solid. */
     static int opacity = 40;
+    /** App size: Small shows 5 apps per row, Large shows 4. */
+    static boolean largeApps = false;
 
     private Theme() {
     }
@@ -16,6 +18,7 @@ final class Theme {
         Prefs p = new Prefs(c);
         night = p.night();
         opacity = p.opacity();
+        largeApps = p.largeApps();
     }
 
     private static float o() {

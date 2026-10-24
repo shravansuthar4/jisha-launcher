@@ -19,6 +19,7 @@ final class Prefs {
     private static final String KEY_NIGHT = "night";
     private static final String KEY_OPACITY = "glass_opacity";
     private static final String KEY_LAST_FOCUS = "last_focus";
+    private static final String KEY_LARGE_APPS = "large_apps";
 
     /** Apps shown first, in this order, until the user rearranges them. */
     static final List<String> DEFAULT_ORDER = Arrays.asList(
@@ -97,6 +98,15 @@ final class Prefs {
 
     void setOpacity(int value) {
         sp.edit().putInt(KEY_OPACITY, Math.max(0, Math.min(100, value))).apply();
+    }
+
+    /** App size: false = Small (5 per row, default), true = Large (4 per row). */
+    boolean largeApps() {
+        return sp.getBoolean(KEY_LARGE_APPS, false);
+    }
+
+    void setLargeApps(boolean on) {
+        sp.edit().putBoolean(KEY_LARGE_APPS, on).apply();
     }
 
     /** What was last opened from the home screen (app id or top-button key). */

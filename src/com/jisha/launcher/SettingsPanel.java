@@ -283,6 +283,26 @@ final class SettingsPanel extends FrameLayout {
         LinearLayout.LayoutParams hint2 = new LinearLayout.LayoutParams(-1, -2);
         hint2.topMargin = dp(10);
         panel.addView(hint, hint2);
+
+        // App size: Small (5 per row) / Large (4 per row).
+        LinearLayout.LayoutParams alp = labelParams();
+        alp.topMargin = dp(26);
+        panel.addView(label("APP SIZE"), alp);
+        LinearLayout size = new LinearLayout(ctx);
+        size.setOrientation(LinearLayout.HORIZONTAL);
+        size.setPadding(dp(4), dp(4), dp(4), dp(4));
+        size.setClipChildren(false);
+        GradientDrawable sizeBg = new GradientDrawable();
+        sizeBg.setColor(Theme.soft());
+        sizeBg.setCornerRadius(dp(22));
+        size.setBackground(sizeBg);
+        size.addView(segment(R.drawable.ic_apps, "Small", !Theme.largeApps), new LinearLayout.LayoutParams(0, dp(36), 1f));
+        LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(0, dp(36), 1f);
+        llp.leftMargin = dp(4);
+        size.addView(segment(R.drawable.ic_display, "Large", Theme.largeApps), llp);
+        LinearLayout.LayoutParams szp = new LinearLayout.LayoutParams(-1, -2);
+        szp.setMargins(dp(2), dp(10), dp(2), 0);
+        panel.addView(size, szp);
     }
 
     // ---------------------------------------------------------------- parts
@@ -499,10 +519,17 @@ final class SettingsPanel extends FrameLayout {
         paint.run();
         s.setOnFocusChangeListener((v, has) -> paint.run());
         s.setOnClickListener(v -> {
-            boolean wantNight = "Night".equals(name);
-            if (wantNight == Theme.night) return;
-            prefs.setNight(wantNight);
-            Theme.night = wantNight;
+            if ("Small".equals(name) || "Large".equals(name)) {
+                boolean wantLarge = "Large".equals(name);
+                if (wantLarge == Theme.largeApps) return;
+                prefs.setLargeApps(wantLarge);
+                Theme.largeApps = wantLarge;
+            } else {
+                boolean wantNight = "Night".equals(name);
+                if (wantNight == Theme.night) return;
+                prefs.setNight(wantNight);
+                Theme.night = wantNight;
+            }
             focusTag = name;
             onThemeChanged.run();
         });
