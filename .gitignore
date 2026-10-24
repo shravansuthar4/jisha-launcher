@@ -1,0 +1,11 @@
+# Build output
+build/
+*.apk
+*.idsig
+
+# Signing key and its password: never publish these
+*.keystore
+keystore.properties
+
+# macOS
+.DS_Store

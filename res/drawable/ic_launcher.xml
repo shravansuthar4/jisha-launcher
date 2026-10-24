@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Jisha icon: white rounded square with a black J. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp" android:height="96dp"
+    android:viewportWidth="96" android:viewportHeight="96">
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M22,0h52a22,22 0 0 1 22,22v52a22,22 0 0 1 -22,22h-52a22,22 0 0 1 -22,-22v-52a22,22 0 0 1 22,-22z" />
+    <path android:fillColor="#FF000000"
+        android:pathData="M53,20h12v38c0,11.5 -7.5,18 -18.5,18c-10,0 -16.5,-5.5 -17.5,-14.5l11.5,-2c0.6,4.2 2.8,6.5 6.2,6.5c4,0 6.3,-2.8 6.3,-8z" />
+</vector>

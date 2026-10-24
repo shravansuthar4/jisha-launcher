@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fire TV app-row banner: white with a black J. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp" android:height="180dp"
+    android:viewportWidth="320" android:viewportHeight="180">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M0,0h320v180h-320z" />
+    <path android:fillColor="#FF000000"
+        android:pathData="M164,42h18v57c0,17.3 -11.3,27 -27.8,27c-15,0 -24.8,-8.3 -26.2,-21.8l17.3,-3c0.9,6.3 4.2,9.8 9.3,9.8c6,0 9.4,-4.2 9.4,-12z" />
+</vector>
